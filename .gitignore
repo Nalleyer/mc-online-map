@@ -1,0 +1,9 @@
+#ignore all
+*
+
+# unignore all dir
+!*/
+
+# white list
+!*.pm6
+!*.p6
