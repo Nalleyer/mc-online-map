@@ -27,16 +27,25 @@ my %UP = (
 
 spurt JSON_DATA, '{}' unless JSON_DATA.IO ~~ :f;
 my %data = from-json JSON_DATA.IO.slurp;
-my $tokens = Tokens.new;
+my $logTokens = Tokens.new(time_out => TIME_OUT_LOGIN);
+my $timeTokens = Tokens.new(time_out => TIME_OUT_TIME);
 
 sub writeData {
     spurt JSON_DATA, to-json %data;
 }
 
-sub newToken {
+sub getToken($tokens) {
     my $t = $tokens.getToken(%data);
     writeData;
     $t
+}
+
+sub newLogToken {
+    getToken($logTokens);
+}
+
+sub newTimeTOken {
+    getToken($timeTokens);
 }
 
 my $time = -1;
@@ -50,7 +59,7 @@ sub routes() is export {
         }
 
         get -> 'api', 'login' {
-            content 'text/plain', newToken
+            content 'text/plain', newTimeTOken
         }
 
         post -> 'api', $type {
@@ -58,9 +67,9 @@ sub routes() is export {
                 when 'login' {
                     request-body 'application/json' => -> %json {
                         # keys: usr, time_token, hash
-                        if $tokens.isValid(%json<time_token>, TIME_OUT_TIME) {
+                        if $timeTokens.isValid(%json<time_token>) {
                             if md5(%UP{ %json<usr> } ~ %json<time_token>) eq %json<hash> {
-                                content 'text/plain', newToken;
+                                content 'text/plain', newLogToken;
                             }
                             else {
                                 response.status = 400;
