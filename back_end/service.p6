@@ -17,13 +17,23 @@ my Cro::Service $http = Cro::HTTP::Server.new(
         Cro::HTTP::Log::File.new(logs => $*OUT, errors => $*ERR)
     ]
 );
+
+start react {
+    whenever Supply.interval(10) -> $v {
+        say "refreshing server...";
+        refresh;
+    }
+}
+
 $http.start;
 say "Listening at http://%*ENV<MC_HOST>:%*ENV<MC_PORT>";
 react {
     whenever signal(SIGINT) {
         #say "no I'm not going to shutting down...";
         say "down...";
+        save;
         $http.stop;
         done;
     }
 }
+

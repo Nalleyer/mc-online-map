@@ -3,6 +3,7 @@ use JSON::Fast;
 use Digest::MD5;
 
 use Token;
+use DataBase;
 
 my $md5 = Digest::MD5.new;
 
@@ -26,17 +27,17 @@ my %UP = (
 );
 
 spurt JSON_DATA, '{}' unless JSON_DATA.IO ~~ :f;
-my %data = from-json JSON_DATA.IO.slurp;
+my $data = ServerData.new(json_file => JSON_DATA);
 my $logTokens = Tokens.new(time_out => TIME_OUT_LOGIN);
 my $timeTokens = Tokens.new(time_out => TIME_OUT_TIME);
 
-sub writeData {
-    spurt JSON_DATA, to-json %data;
+sub save is export {
+    $data.save(JSON_DATA);
 }
 
 sub getToken($tokens) {
-    my $t = $tokens.getToken(%data);
-    writeData;
+    my $t = $tokens.getToken($data.tokenId);
+    $data.incTokenId;
     $t
 }
 
@@ -52,27 +53,103 @@ my $time = -1;
 my $ran = '';
 my $h1 = '';
 
+sub refresh() is export {
+    $timeTokens.deleteOldToken;
+    $logTokens.deleteOldToken;
+}
+
 sub routes() is export {
     route {
         get -> {
             content 'text/html', "<h1> hello </h1>";
         }
 
-        get -> 'api', 'login' {
-            content 'text/plain', newTimeTOken
+        get -> 'test' {
+            content 'text/plain', to-json $data.getPoints;
+
+        }
+
+        get -> 'api', $type, :%headers is header {
+            if $type ∉ <login> and !$logTokens.isValid(%headers<token>) {
+                forbidden
+            }
+            else {
+                given $type {
+                    when 'login'  { content 'text/plain', newTimeTOken }
+                    when 'points' {
+                        content 'application/json', to-json $data.getPoints;
+                    }
+                    default       { response.status = 404 }
+                }
+            }
+        }
+
+        put -> 'api', 'points' {
+            request-body 'application/json' => -> %json = {} {
+                # { token : xxx, point : xxx, name : xxx, method : add | set | delete } }
+                if    ! (%json<token>.defined
+                          and %json<point>.defined
+                          and %json<method>.defined)        { bad-request }
+                elsif ! $logTokens.isValid(%json<token>)    { forbidden   }
+                else {
+                    my $p = parsePoint(%json<point>);
+                    if ! $p {
+                        bad-request
+                    }
+                    else {
+                        if %json<method> ∈ <add set>
+                          and ! %json<name>.defined {
+                            bad-request
+                        }
+                        else {
+                            given %json<method> {
+                                when 'add' {
+                                    if $data.pointExists($p) {
+                                        content 'text/plain', 'exists'
+                                    }
+                                    else {
+                                        $data.setPoint($p, %json<name>);
+                                        content 'text/plain', 'ok'
+                                    }
+
+                                }
+                                when 'set' {
+                                    if !$data.pointExists($p) {
+                                        content 'text/plain', 'not-found'
+                                    }
+                                    else {
+                                        $data.setPoint($p, %json<name>);
+                                        content 'text/plain', 'ok'
+                                    }
+                                }
+                                when 'delete' {
+                                    if !$data.pointExists($p) {
+                                        content 'text/plain', 'not-found'
+                                    }
+                                    else {
+                                        $data.deletePoint($p);
+                                        content 'text/plain', 'ok'
+                                    }
+                                }
+                            }
+                        }
+                    }                
+                }
+            }
         }
 
         post -> 'api', $type {
             given $type {
                 when 'login' {
-                    request-body 'application/json' => -> %json {
+                    request-body 'application/json' => -> %json = {} {
                         # keys: usr, time_token, hash
-                        if $timeTokens.isValid(%json<time_token>) {
+                        if ! %json<time_token>.defined { bad-request }
+                        elsif $timeTokens.isValid(%json<time_token>) {
                             if md5(%UP{ %json<usr> } ~ %json<time_token>) eq %json<hash> {
                                 content 'text/plain', newLogToken;
                             }
                             else {
-                                response.status = 400;
+                                forbidden
                             }
                         }
                         else {
@@ -82,7 +159,7 @@ sub routes() is export {
                 }
 
                 default {
-                   response.status = 404;
+                   not-found
                 }
             }
         }

@@ -1,6 +1,5 @@
-use Digest::MD5;
-
 unit module Token;
+use Digest::MD5;
 
 class Tokens is export {
     #token => birthday
@@ -9,14 +8,28 @@ class Tokens is export {
 
     submethod BUILD(:time_out(:$!timeOut)) { }
 
-    method getToken(%data --> Str) {
-        %data<token_id> += 1;
-        self.makeToken(%data<token_id>);
+    method getToken(Int $id --> Str) {
+        self.makeToken($id);
     }
 
     method isValid(Str $token) {
         so %!tokens{$token}:exists
             and DateTime.now.posix - %!tokens{$token} <= $!timeOut;
+    }
+
+    method deleteOldToken {
+        for %!tokens.kv -> $k, $v {
+            next if self.isValid($k);
+            %!tokens{$k}:delete
+        }
+    }
+
+    method refresh(Str $token) {
+        %!tokens{$token} = DateTime.now.posix if %!tokens{$token}:exists;
+    }
+
+    method gist {
+        %!tokens.gist
     }
 
     submethod makeToken(Int $id) {
