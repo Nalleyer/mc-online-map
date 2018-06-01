@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <title>MCC 记录你的坐标</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="/css/page.css">
+    </head>
+    <body>
+        <div id="app">
+            <div id="login-bg" v-show="dialogShown" @click="closeLoginDialog">
+                <div id="login-outer">
+                    <div id="login-vertical">
+                        <div id="login-dialog" @click="dontClose($event)">
+                            <div id="login-form">
+                                <input v-model="loginUser" name="usr" type="text" placeholder="用户名"/><br>
+                                <input v-model="loginPassWord" name="psw" type="password" placeholder="密码"/><br>
+                                <button class ="form-button" @click="login" type="button">登入</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <header>
+                <div class="header-left">
+                    <p id="header-title">
+                        MineCraft FYQ服  坐标记录系统  Ver{{ version }}
+                    </p>
+                </div>
+                <div class="header-right">
+                    <button v-if="loggedIn" @click="logout" type="button">登出</button>
+                    <button v-else @click="openLoginDialog" type="button">登入</button>
+                </div>
+            </header>
+            <section>
+                <h1>
+                    building...
+                </h1>
+            </section>
+        </div>
+    </body>
+    <script src="/js/vue.js"></script>
+    <script src="/js/vue-resource.js"></script>
+    <script src="/js/main.js"></script>
+</html>

@@ -19,6 +19,8 @@ sub myRand {
     1e4.rand.Str
 }
 
+constant FRONT = '../front_end';
+
 constant JSON_DATA = 'data.json';
 constant TIME_OUT_LOGIN = 3600;
 constant TIME_OUT_TIME = 5;
@@ -30,6 +32,7 @@ spurt JSON_DATA, '{}' unless JSON_DATA.IO ~~ :f;
 my $data = ServerData.new(json_file => JSON_DATA);
 my $logTokens = Tokens.new(time_out => TIME_OUT_LOGIN);
 my $timeTokens = Tokens.new(time_out => TIME_OUT_TIME);
+
 
 sub save is export {
     $data.save(JSON_DATA);
@@ -61,12 +64,19 @@ sub refresh() is export {
 sub routes() is export {
     route {
         get -> {
-            content 'text/html', "<h1> hello </h1>";
+            static FRONT ~ '/html/index.html'
+        }
+
+        get -> 'js', *@path {
+            static FRONT ~ '/js', @path
+        }
+
+        get -> 'css', *@path {
+            static FRONT ~ '/css', @path
         }
 
         get -> 'test' {
-            content 'text/plain', to-json $data.getPoints;
-
+            content 'text/plain', to-json $data.getPoints
         }
 
         get -> 'api', $type, :%headers is header {
