@@ -1,3 +1,7 @@
+[v-cloak] {
+    display: none;
+}
+
 html, body, #app {
     height : 100%;
 }
@@ -43,6 +47,10 @@ button {
     display          : inline-block;
     font-size        : 16px;
     cursor           : pointer;
+}
+
+button.logout {
+    background-color : #7f4772;
 }
 
 #login-bg {
