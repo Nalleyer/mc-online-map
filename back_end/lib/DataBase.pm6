@@ -2,8 +2,8 @@ unit module DataBase;
 use JSON::Fast;
 
 class Point {
-    has $.x;
-    has $.y;
+    has Int $.x;
+    has Int $.y;
 
     method gist {
         "($.x,$.y)"
@@ -21,11 +21,11 @@ grammar GPoint {
 
     token X { <Number> }
     token Y { <Number> }
-    token Number { \d+ }
+    token Number { '-'? \d+ }
 }
 
 class ActPoint {
-    method TOP ($/) { make Point.new(x => $<X>, y => $<Y>) }
+    method TOP ($/) { make Point.new(x => $<X>.made, y => $<Y>.made) }
     method X ($/) { make $<Number>.made }
     method Y ($/) { make $<Number>.made }
     method Number ($/) { make $/.Int }
@@ -54,8 +54,8 @@ class ServerData is export {
         my @ps;
         for %!points.kv -> $p, $n {
             @ps.push: {
-                x => $p.x.Str,
-                y => $p.y.Str,
+                x => $p.x,
+                y => $p.y,
                 name => $n,
             };
         }

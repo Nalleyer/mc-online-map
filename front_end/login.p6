@@ -57,12 +57,12 @@ sub MAIN($x, $y, $name) {
 
 
 ## set point
-    %p2<method> = 'set';
-    %p2<name> = 'setted';
-    my $req3 = put(URI_P, $a, %p2, %h);
-    die $req3.status-line unless $req3.is-success;
-    say 'setted, got: '  ~ $req3.content;
-    say $a.get(URI_P, |{'token' => $token}).content;
+#    %p2<method> = 'set';
+#    %p2<name> = 'setted';
+#    my $req3 = put(URI_P, $a, %p2, %h);
+#    die $req3.status-line unless $req3.is-success;
+#    say 'setted, got: '  ~ $req3.content;
+#    say $a.get(URI_P, |{'token' => $token}).content;
 ## delete point
 #    %p2<method> = 'delete';
 #    %p2<name>:delete;

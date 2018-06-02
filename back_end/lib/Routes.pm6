@@ -80,7 +80,7 @@ sub routes() is export {
         }
 
         get -> 'api', $type, :%headers is header {
-            if $type ∉ <login> and !$logTokens.isValid(%headers<token>) {
+            if $type ∉ <login points> and !$logTokens.isValid(%headers<token>) {
                 forbidden
             }
             else {

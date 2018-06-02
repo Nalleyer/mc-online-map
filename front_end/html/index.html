@@ -7,22 +7,27 @@
     </head>
     <body>
         <div id="app">
-            <div v-cloak id="login-bg" v-show="dialogShown" @click="closeLoginDialog">
+            <div v-cloak class="black" id="loading" v-show="loadingShown" @click.stop>
+            </div>
+            <div v-cloak class="black" id="login-bg" v-if="dialogShown" @click="closeLoginDialog">
                 <div id="login-outer">
                     <div id="login-vertical">
-                        <div id="login-dialog" @click="dontClose($event)">
+                        <div id="login-dialog" @click.stop>
                             <div id="login-form">
-                                <input v-model="loginUser" name="usr" type="text" placeholder="用户名"/><br>
-                                <input v-model="loginPassWord" name="psw" type="password" placeholder="密码"/><br>
-                                <button class ="form-button" @click="login" type="button">登入</button>
+                                <input v-cloak v-model="loginUser" @focus="editing" name="usr" type="text" placeholder="用户名"/><br>
+                                <input v-cloak v-model="loginPassWord" @focus="editing" name="psw" type="password" placeholder="密码"/><br>
+                                <p class="word" v-if="wrongPasswordShown">
+                                    用户名或密码错误，请确认后重试
+                                </p>
+                                <button class="form-button" @click="login" type="button" :disabled="processing">登入</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <header>
+            <header class="shadow">
                 <div class="header-left">
-                    <p id="header-title">
+                    <p class="word" id="header-title">
                         MineCraft FYQ服  坐标记录系统  Ver{{ version }}
                     </p>
                 </div>
@@ -31,14 +36,40 @@
                     <button v-cloak v-else @click="openLoginDialog" type="button">登入</button>
                 </div>
             </header>
-            <section>
-                <h1>
-                    building...
-                </h1>
+            <section @dblclick.prevent>
+                <div id="left" class="shadow">
+                    <div id="list-filter">
+                        <input name="filter" type="text" placeholder="通过名称过滤(未完成)"/>
+                    </div>
+                    <ul v-cloak id="p-list">
+                        <li v-for="p in points">
+                            <div class="split" @dblclick.prevent="say('hehe')">
+                                {{ p.name + " : " + "(" + p.x + "," + p.y + ")" }}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div id="right">
+                    <p>
+                        少女祈祷中…………临时操作方法：
+                    </p>
+                    <ol>
+                        <li>登录</li>
+                        <li>按F12,进入命令行</li>
+                        <li>接口如下：
+                            <ul>
+                                <li>增加点： app.addPoint(x,y,name)</li>
+                                <li>删除点： app.deletePoint(x,y)</li>
+                                <li>为指定坐标的点改名字： app.renamePoint(x,y,newName)</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
             </section>
         </div>
     </body>
     <script src="/js/vue.js"></script>
     <script src="/js/vue-resource.js"></script>
+    <script src="/js/md5.min.js"></script>
     <script src="/js/main.js"></script>
 </html>
