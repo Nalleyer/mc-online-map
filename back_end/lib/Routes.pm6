@@ -22,11 +22,10 @@ sub myRand {
 constant FRONT = '../front_end';
 
 constant JSON_DATA = 'data.json';
+constant USR_DATA= 'user.json';
 constant TIME_OUT_LOGIN = 3600;
 constant TIME_OUT_TIME = 5;
-my %UP = (
-    'admin' => 'bjsdxb',
-);
+my %UP = from-json USR_DATA.IO.slurp;
 
 spurt JSON_DATA, '{}' unless JSON_DATA.IO ~~ :f;
 my $data = ServerData.new(json_file => JSON_DATA);
