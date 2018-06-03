@@ -1,7 +1,7 @@
 var app = new Vue({
     el: '#app',
     data: {
-        version       : 0.1,
+        version       : 0.3,
         loggedIn      : false,
 
         dialogShown   : false,
@@ -16,23 +16,64 @@ var app = new Vue({
         loginPassWord : '',
 
         points : [],
+        editingPoint : null,
+
+        editingIndex : -1,
+        newPoint : null,
+
+        mouseOverNewPointEditor : false,
+    },
+    computed : {
+        newPointEditorShown: function() {
+            let p = this.newPoint;
+            return this.mouseOverNewPointEditor
+                || p.name
+                || p.x
+                || p.y;
+        },
+        addIconShown: function() {
+            let p = this.newPoint;
+            return p.name
+                && p.x !== null
+                && p.y !== null;
+        }
+    },
+    created: function() {
+        this.resetNewPoint();
     },
     mounted: function() {
         this.getPoints();
         this.loadingShown = false;
+
+        setInterval(() => {
+            this.getPoints();
+        }, 5000);
     },
     methods: {
         openLoginDialog: function() {
             this.dialogShown = true;
         },
-        editing: function() {
+        logEditing: function() {
             this.wrongPasswordShown = false;
         },
-        login: function() {
+        sortPoints: function() {
+            this.points.sort(
+                (p1, p2) => {
+                    if (p1.x !== p2.x) {
+                        return p1.x - p2.x;
+                    }
+                    if (p1.y !== p2.y) {
+                        return p1.y - p2.y;
+                    }
+                    return p1.name - p2.name;
+                }
+            );
+        },
+        login: function(after) {
             this.say("login");
             this.processing = true;
             // get time token
-            this.$http.get('/api/login').then(
+            return this.$http.get('/api/login').then(
                 response => {
                     let timeToken = response.body;
                     // post to login
@@ -49,6 +90,9 @@ var app = new Vue({
                             console.log("logged in");
                             this.closeLoginDialog();
                             this.processing = false;
+                            if (after) {
+                                after();
+                            }
                         },
                         response => {
                             this.wrongPassword();
@@ -73,22 +117,25 @@ var app = new Vue({
         closeLoginDialog: function() {
             this.dialogShown = false;
         },
-        getPoints: function() {
+        getPoints: function(after) {
             this.$http.get('/api/points', {
                 headers : {
                     token: this.logToken
                 }
             }).then(
                 response => {
-                    console.log(response.body);
                     this.points = response.body;
+                    this.sortPoints();
+                    if (after) {
+                        after();
+                    }
                 },
                 response => {
                     console.log("get points failed");
                 }
             );
         },
-        addPoint: function(x, y, name) {
+        addPoint: function(x, y, name, after) {
             if ( this.isInt(x) && this.isInt(y) ) {
                 this.$http.put('/api/points', {
                     token : this.logToken,
@@ -98,8 +145,13 @@ var app = new Vue({
                 }).then(
                     response => {
                         if (response.body === "ok" ) {
-                            this.getPoints();
                             console.log("added");
+                            if (after) {
+                                after();
+                            }
+                        }
+                        else {
+                            console.log("exists");
                         }
                     },
                     response => {
@@ -108,30 +160,30 @@ var app = new Vue({
                 );
             }
         },
-        deletePoint: function(x, y) {
+        deletePoint: function(x, y, after) {
             if (this.isInt(x) && this.isInt(y)) {
                 // search
-                let l = this.points.length;
-                for (let i = 0; i < l; i++) {
-                    if (this.points[i].x === x && this.points[i].y === y) {
-                        this.$http.put('/api/points', {
-                            token : this.logToken,
-                            point : "(" + x + "," + y + ")",
-                            method : "delete",
-                        }).then(
-                            response => {
-                                this.getPoints();
-                                console.log("deleted");
-                            },
-                            response => {
-                                console.log("failed");
-                            }
-                        );
+                this.$http.put('/api/points', {
+                    token : this.logToken,
+                    point : "(" + x + "," + y + ")",
+                    method : "delete",
+                }).then(
+                    response => {
+                        console.log("deleted");
+                        if (after) {
+                            after();
+                        }
+                    },
+                    response => {
+                        console.log("failed");
                     }
-                }
+                );
+            }
+            else {
+                console.log("not number");
             }
         },
-        renamePoint: function(x, y, newName) {
+        renamePoint: function(x, y, newName, after) {
             if (this.isInt(x) && this.isInt(y)) {
                 // search
                 let l = this.points.length;
@@ -145,19 +197,68 @@ var app = new Vue({
                         }).then(
                             response => {
                                 if (response.body === "ok" ) {
-                                    this.getPoints();
                                     console.log("added");
+                                    if (after) {
+                                        after();
+                                    }
                                 }
                             },
                             response => {
                                 console.log("failed. " + response.body);
                             }
                         );
-                        return;
                     }
                 }
                 console.log("no such point");
             }
+        },
+        coorClicked: function(p) {
+            this.editingPoint = {
+                name : p.name,
+                x : p.x,
+                y : p.y,
+            };
+        },
+        coorEdited: function(index) {
+            let oldP = this.editingPoint;
+            let newP = this.points[index];
+            if (oldP.x === newP.x && oldP.y === newP.y) {
+                if (oldP.name !== newP.name) {
+                    // update name
+                    this.renamePoint(newP.x,newP.y,newP.name);
+                }
+            }
+            else {
+                // delete and add
+                console.log("to delete");
+                console.log(oldP);
+                this.deletePoint(oldP.x, oldP.y);
+                this.addPoint(newP.x, newP.y, newP.name);
+            }
+            this.sortPoints();
+        },
+        deleteFromUI: function(index) {
+            let p = this.points[index];
+            this.deletePoint(p.x, p.y);
+            this.points.splice(index,1);
+        },
+        addFromUI: function() {
+            let p = this.newPoint;
+            console.log(p);
+            this.addPoint(p.x, p.y, p.name,
+                () => {
+                    this.points.push(p);
+                    this.sortPoints();
+                    this.resetNewPoint();
+                }
+            );
+        },
+        resetNewPoint: function() {
+            this.newPoint = {
+                name : null,
+                x : null,
+                y : null,
+            };
         },
         isInt: function(a) {
             return (typeof a==='number' && (a%1)===0);

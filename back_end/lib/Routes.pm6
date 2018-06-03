@@ -74,6 +74,10 @@ sub routes() is export {
             static FRONT ~ '/css', @path
         }
 
+        get -> 'img', *@path {
+            static FRONT ~ '/other', @path
+        }
+
         get -> 'test' {
             content 'text/plain', to-json $data.getPoints
         }
