@@ -1,5 +1,10 @@
+import coor from '/js/coor.js';
+
 var app = new Vue({
     el: '#app',
+    components: {
+        coor
+    },
     data: {
         version       : 0.3,
         loggedIn      : false,
@@ -18,10 +23,13 @@ var app = new Vue({
         points : [],
         editingPoint : null,
 
+        gettingPointsFromServer: true,
         editingIndex : -1,
         newPoint : null,
 
         mouseOverNewPointEditor : false,
+
+        toNetherCoor: false,
     },
     computed : {
         newPointEditorShown: function() {
@@ -36,7 +44,25 @@ var app = new Vue({
             return p.name
                 && p.x !== null
                 && p.y !== null;
-        }
+        },
+        pointsNether: function() {
+            const f = 8;
+            return this.points.map(p => {
+                return {
+                    name: p.name,
+                    x: Math.floor(p.x / f),
+                    y: Math.floor(p.y / f),
+                };
+            });
+        },
+        pointsforShowing: function() {
+            if (this.toNetherCoor) {
+                return this.pointsNether;
+            }
+            else {
+                return this.points;
+            }
+        },
     },
     created: function() {
         this.resetNewPoint();
@@ -46,7 +72,9 @@ var app = new Vue({
         this.loadingShown = false;
 
         setInterval(() => {
-            this.getPoints();
+            if (this.gettingPointsFromServer) {
+                this.getPoints();
+            }
         }, 5000);
     },
     methods: {
@@ -118,6 +146,7 @@ var app = new Vue({
             this.dialogShown = false;
         },
         getPoints: function(after) {
+            console.log("getPoints...");
             this.$http.get('/api/points', {
                 headers : {
                     token: this.logToken
@@ -219,6 +248,9 @@ var app = new Vue({
                 y : p.y,
             };
         },
+        setCoorEditing: function() {
+            this.coorEditing = true;
+        },
         coorEdited: function(index) {
             let oldP = this.editingPoint;
             let newP = this.points[index];
@@ -235,6 +267,7 @@ var app = new Vue({
                 this.deletePoint(oldP.x, oldP.y);
                 this.addPoint(newP.x, newP.y, newP.name);
             }
+            this.gettingPointsFromServer = true;
             this.sortPoints();
         },
         deleteFromUI: function(index) {
@@ -267,4 +300,4 @@ var app = new Vue({
             console.log(str);
         }
     }
-})
+});

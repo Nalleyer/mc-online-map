@@ -66,12 +66,20 @@ sub routes() is export {
             static FRONT ~ '/html/index.html'
         }
 
+        get -> 'html', *@path {
+            static FRONT ~ '/html', @path
+        }
+
         get -> 'js', *@path {
             static FRONT ~ '/js', @path
         }
 
         get -> 'css', *@path {
             static FRONT ~ '/css', @path
+        }
+
+        get -> 'favicon.ico' {
+            static FRONT ~ '/other/favicon.ico'
         }
 
         get -> 'img', *@path {

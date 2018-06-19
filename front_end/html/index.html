@@ -4,6 +4,9 @@
         <title>MCC 记录你的坐标</title>
         <meta charset="utf-8">
         <link rel="stylesheet" type="text/css" href="/css/page.css">
+        <script src="/js/vue.js"></script>
+        <script src="/js/vue-resource.js"></script>
+        <script src="/js/md5.min.js"></script>
     </head>
     <body>
         <div id="app">
@@ -19,7 +22,7 @@
                                 <p class="word" v-if="wrongPasswordShown">
                                     用户名或密码错误，请确认后重试
                                 </p>
-                                <button class="form-button" @click="login" type="button" :disabled="processing">登入</button>
+                                <button class="form-button" @click="login()" type="button" :disabled="processing">登入</button>
                             </div>
                         </div>
                     </div>
@@ -38,6 +41,14 @@
             </header>
             <section @dblclick.prevent>
                 <div id="left" class="lr shadow">
+                    <div id="switches">
+                        <ul>
+                            <li>
+                                <input type="checkbox" v-model="toNetherCoor"/>
+                                <label>转换成地狱坐标</label>
+                            </li>
+                        </ul>
+                    </div>
                     <div id="list-filter">
                         <input name="filter" type="text" placeholder="通过名称过滤(未完成)"/>
                     </div>
@@ -58,16 +69,19 @@
                                 <label v-else class="word">鼠标移动至此添加新坐标~</label>
                             </div>
                         </li>
-                        <li v-for="(p,index) in points" @click="coorClicked(p)"
+                        <li v-for="(p,index) in pointsforShowing" @click="coorClicked(p)"
                             @mouseenter="editingIndex = index"
                             @mouseleave="editingIndex = -1">
                             <div class="split" @dblclick.prevent>
-                                <input class="coor-name no-border" type="text" maxlength="16" v-model="p.name" @blur="coorEdited(index)"
+                                <input class="coor-name no-border" type="text" maxlength="16"
+                                       v-model="p.name" @blur="coorEdited(index)" @focus="setCoorEditing()"
                                        :disabled="loggedIn !== true"/>
-                                <input class="coor no-border" type="number"  maxlength="5" v-model.number="p.x" @blur="coorEdited(index)"
+                                <input class="coor no-border" type="number"  maxlength="6"
+                                       v-model.number="p.x" @blur="coorEdited(index)" @focus="setCoorEditing()"
                                        :disabled="loggedIn !== true"/>
                                 <label class="coor-name"> , </label>
-                                <input class="coor no-border" type="number" maxlength="5" v-model.number="p.y" @blur="coorEdited(index)"
+                                <input class="coor no-border" type="number" maxlength="6"
+                                       v-model.number="p.y" @blur="coorEdited(index)" @focus="setCoorEditing()"
                                        :disabled="loggedIn !== true"/>
                                 <div class="coor-img" v-if="loggedIn && index === editingIndex" @click="deleteFromUI(index)">
                                     <img class="icon" alt="delete-icon" src="/img/delete.png" height="16" width="16"/>
@@ -77,27 +91,34 @@
                     </ul>
                 </div>
                 <div id="right" class="lr word">
-                    <p>
-                        少女祈祷中…………临时操作方法：
-                    </p>
-                    <ol>
-                        <li>登录</li>
-                        <li>按F12,进入命令行</li>
-                        <li>接口如下：
-                            <ul>
-                                <li>增加点： app.addPoint(x,y,name)</li>
-                                <li>删除点： app.deletePoint(x,y)</li>
-                                <li>为指定坐标的点改名字： app.renamePoint(x,y,newName)</li>
-                            </ul>
-                        </li>
-                        <li>可使用app.getPoints()刷新更改</li>
-                    </ol>
+                    <coor :ps="points"></coor>
                 </div>
             </section>
         </div>
+        <script type="module" src="/js/main.js"></script>
+        <script type="module" src="/js/coor.js"></script>
     </body>
-    <script src="/js/vue.js"></script>
-    <script src="/js/vue-resource.js"></script>
-    <script src="/js/md5.min.js"></script>
-    <script src="/js/main.js"></script>
+    <!-- components-->
+    <template id="coor-tpl">
+        <div class="container">
+            <canvas id="cv">
+            </canvas>
+            <div id="mouse-pos" class="hud">
+                {{ mousePosInMap.x }} , {{ mousePosInMap.y }}
+            </div>
+            <div id="scale" class="hud">
+                <div class="word">
+                    {{ scaleHUD }}格
+                </div>
+                <div>
+                    <div class="scale-end">
+                    </div>
+                    <div class="scale-body" :style="'width:' + scaleWidth + 'px;'">
+                    </div>
+                    <div class="scale-end">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </html>

@@ -153,7 +153,17 @@ section {
 }
 
 #right {
-    width: 70%;
+    padding: 0px 0px;
+    width: 80%;
+}
+
+#switches li {
+    list-style-type: none;
+}
+
+#switches ul {
+    padding: 0;
+    margin: 4px;
 }
 
 #list-filter {
@@ -186,7 +196,6 @@ section {
 
     padding-right: 0px;
     position: relative;
-
 }
 
 .split:hover {
@@ -214,7 +223,7 @@ section {
 
 .coor {
     text-align: center;
-    max-width: 32px;
+    max-width: 48px;
 }
 
 .coor-name {
@@ -247,4 +256,62 @@ section {
 }
 
 #new-point input {
+}
+
+.container {
+    padding: 4px;
+}
+
+#right .container {
+    background: #525f3b;
+    width: 98%;
+    height: 98%;
+    padding: 8px;
+    position: relative;
+}
+
+#cv {
+    width: 100%;
+    height: 100%;
+    background: white;
+}
+
+.hud {
+    position: absolute;
+    z-index: 10;
+    bottom: 20px;
+}
+
+#scale {
+    left: 20px;
+    bottom: 20px;
+}
+
+#scale .scale-end,
+#scale .scale-body {
+    margin: 0;
+    margin-right: -6px;
+    display: inline-block;
+}
+
+#scale .word {
+    font-size: smaller;
+    display: block;
+    text-align: left;
+    margin-bottom: -4px;
+}
+
+.scale-end {
+    width: 1px;
+    height: 8px;
+    background: black;
+}
+
+.scale-body {
+    height: 2px;
+    background: black;
+}
+
+#mouse-pos {
+    right: 20px;
 }
