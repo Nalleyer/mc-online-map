@@ -69,20 +69,20 @@
                                 <label v-else class="word">鼠标移动至此添加新坐标~</label>
                             </div>
                         </li>
-                        <li v-for="(p,index) in pointsforShowing" @click="coorClicked(p)"
+                        <li v-for="(p,index) in pointsForShowing" @click="coorClicked(p)"
                             @mouseenter="editingIndex = index"
                             @mouseleave="editingIndex = -1">
                             <div class="split" @dblclick.prevent>
                                 <input class="coor-name no-border" type="text" maxlength="16"
                                        v-model="p.name" @blur="coorEdited(index)" @focus="setCoorEditing()"
-                                       :disabled="loggedIn !== true"/>
+                                       :disabled="!loggedIn || toNetherCoor"/>
                                 <input class="coor no-border" type="number"  maxlength="6"
                                        v-model.number="p.x" @blur="coorEdited(index)" @focus="setCoorEditing()"
-                                       :disabled="loggedIn !== true"/>
+                                       :disabled="!loggedIn || toNetherCoor"/>
                                 <label class="coor-name"> , </label>
                                 <input class="coor no-border" type="number" maxlength="6"
                                        v-model.number="p.y" @blur="coorEdited(index)" @focus="setCoorEditing()"
-                                       :disabled="loggedIn !== true"/>
+                                       :disabled="!loggedIn || toNetherCoor"/>
                                 <div class="coor-img" v-if="loggedIn && index === editingIndex" @click="deleteFromUI(index)">
                                     <img class="icon" alt="delete-icon" src="/img/delete.png" height="16" width="16"/>
                                 </div>

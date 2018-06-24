@@ -30,6 +30,7 @@ var app = new Vue({
         mouseOverNewPointEditor : false,
 
         toNetherCoor: false,
+        nf : 8,
     },
     computed : {
         newPointEditorShown: function() {
@@ -46,16 +47,15 @@ var app = new Vue({
                 && p.y !== null;
         },
         pointsNether: function() {
-            const f = 8;
             return this.points.map(p => {
                 return {
                     name: p.name,
-                    x: Math.floor(p.x / f),
-                    y: Math.floor(p.y / f),
+                    x: Math.floor(p.x / this.nf),
+                    y: Math.floor(p.y / this.nf),
                 };
             });
         },
-        pointsforShowing: function() {
+        pointsForShowing: function() {
             if (this.toNetherCoor) {
                 return this.pointsNether;
             }
@@ -263,7 +263,6 @@ var app = new Vue({
             else {
                 // delete and add
                 console.log("to delete");
-                console.log(oldP);
                 this.deletePoint(oldP.x, oldP.y);
                 this.addPoint(newP.x, newP.y, newP.name);
             }
@@ -277,7 +276,10 @@ var app = new Vue({
         },
         addFromUI: function() {
             let p = this.newPoint;
-            console.log(p);
+            if (this.toNetherCoor) {
+                p.x *= this.nf;
+                p.y *= this.nf;
+            }
             this.addPoint(p.x, p.y, p.name,
                 () => {
                     this.points.push(p);
