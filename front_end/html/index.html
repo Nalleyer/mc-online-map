@@ -75,7 +75,9 @@
                             <div class="split" @dblclick.prevent>
                                 <input class="coor-name no-border" type="text" maxlength="16"
                                        v-model="p.name" @blur="coorEdited(index)" @focus="setCoorEditing()"
-                                       :disabled="!loggedIn || toNetherCoor"/>
+                                       :disabled="!loggedIn || toNetherCoor"
+                                       :title="p.name"
+                                />
                                 <input class="coor no-border" type="number"  maxlength="6"
                                        v-model.number="p.x" @blur="coorEdited(index)" @focus="setCoorEditing()"
                                        :disabled="!loggedIn || toNetherCoor"/>
